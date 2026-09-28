@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Duplicate Finder Pro</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+
+body{
+
+height:100vh;
+
+background:
+radial-gradient(circle at top,#1f2937,#050505);
+
+color:white;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+}
+
+
+
+.app{
+
+width:950px;
+
+padding:30px;
+
+border-radius:25px;
+
+background:rgba(255,255,255,0.08);
+
+backdrop-filter:blur(15px);
+
+border:1px solid rgba(255,255,255,.15);
+
+box-shadow:0 0 50px #000;
+
+}
+
+
+
+.header{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+}
+
+
+
+.logo{
+
+font-size:30px;
+
+font-weight:700;
+
+}
+
+
+.logo span{
+
+color:#00eaff;
+
+}
+
+
+.status{
+
+width:160px;
+
+height:55px;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+gap:10px;
+
+padding:0 15px;
+
+border-radius:30px;
+
+font-family:monospace;
+
+font-size:16px;
+
+font-weight:700;
+
+letter-spacing:.5px;
+
+white-space:nowrap;
+
+transition:.3s;
+
+}
+
+
+
+/* READY */
+
+.status.ready{
+
+background:#00ff9920;
+
+color:#00ff99;
+
+box-shadow:0 0 10px #00ff99;
+
+animation:pulse 2s infinite;
+
+}
+
+
+
+/* PROCESSING */
+
+.status.processing{
+
+background:#ff990020;
+
+color:#ffb000;
+
+border:1px solid #ff9900;
+
+box-shadow:
+0 0 10px #ff9900,
+inset 0 0 10px #ff990020;
+
+animation:scanStatus 1s infinite;
+
+}
+
+.loader{
+
+display:inline-block;
+
+width:18px;
+
+height:18px;
+
+border:3px solid #ffaa00;
+
+border-top-color:transparent;
+
+border-radius:50%;
+
+animation:rotateLoader .8s linear infinite;
+
+}
+
+
+@keyframes rotateLoader{
+
+0%{
+
+transform:rotate(0deg);
+
+}
+
+100%{
+
+transform:rotate(360deg);
+
+}
+
+}
+
+
+/* COMPLETED */
+
+.status.completed{
+
+background:#00eaff20;
+
+color:#00eaff;
+
+box-shadow:0 0 15px #00eaff;
+
+animation:completeGlow 1.5s infinite;
+
+}
+
+
+
+/* ERROR */
+
+.status.error{
+
+background:#ff003320;
+
+color:#ff3333;
+
+border:1px solid #ff3333;
+
+animation:errorBlink .7s infinite;
+
+}
+
+
+
+
+@keyframes pulse{
+
+0%,100%{
+
+transform:scale(1);
+
+}
+
+50%{
+
+transform:scale(1.05);
+
+}
+
+}
+
+
+
+
+@keyframes scanStatus{
+
+0%{
+
+box-shadow:
+0 0 5px #ff9900;
+
+}
+
+
+50%{
+
+box-shadow:
+0 0 25px #ffb000,
+inset 0 0 15px #ff990030;
+
+}
+
+
+100%{
+
+box-shadow:
+0 0 5px #ff9900;
+
+}
+
+}
+
+
+
+@keyframes completeGlow{
+
+0%,100%{
+
+box-shadow:0 0 5px #00eaff;
+
+}
+
+50%{
+
+box-shadow:0 0 25px #00eaff;
+
+}
+
+}
+
+
+
+
+@keyframes errorBlink{
+
+0%,100%{
+
+opacity:1;
+
+}
+
+50%{
+
+opacity:.4;
+
+}
+
+}
+
+
+.upload{
+
+margin-top:30px;
+
+height:170px;
+
+border:2px dashed #00eaff;
+
+border-radius:18px;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+flex-direction:column;
+
+transition:.3s;
+
+}
+
+
+
+.upload.dragover{
+
+background:#00eaff20;
+
+transform:scale(1.02);
+
+}
+
+
+
+.upload input{
+
+margin-top:15px;
+
+background:white;
+
+color:black;
+
+padding:8px;
+
+border-radius:8px;
+
+}
+
+
+
+#fileInfo{
+
+margin-top:15px;
+
+color:#00ff99;
+
+font-family:monospace;
+
+}
+
+
+
+.cards{
+
+display:grid;
+
+grid-template-columns:repeat(3,1fr);
+
+gap:20px;
+
+margin-top:30px;
+
+}
+
+
+
+.card{
+
+padding:20px;
+
+border-radius:15px;
+
+background:#ffffff10;
+
+border:1px solid #ffffff20;
+
+}
+
+
+
+.card h1{
+
+color:#00eaff;
+
+font-size:32px;
+
+}
+
+
+
+.extra{
+
+display:flex;
+
+gap:20px;
+
+margin-top:20px;
+
+}
+
+
+.extra .card{
+
+flex:1;
+
+}
+
+
+
+button{
+
+margin-top:25px;
+
+width:100%;
+
+padding:15px;
+
+border:none;
+
+border-radius:12px;
+
+font-size:17px;
+
+background:#00eaff;
+
+cursor:pointer;
+
+}
+
+
+
+button:hover{
+
+transform:scale(1.02);
+
+}
+
+
+
+.log{
+
+margin-top:25px;
+
+background:#000;
+
+padding:15px;
+
+border-radius:12px;
+
+height:180px;
+
+color:#00ff99;
+
+font-family:monospace;
+
+overflow:auto;
+
+}
+
+
+
+.progress-container{
+
+margin-top:15px;
+
+width: 25%;
+
+height:18px;
+
+background:#001a00;
+
+border:1px solid #00ff99;
+
+border-radius:3px;
+
+overflow:hidden;
+
+position:relative;
+
+box-shadow:
+0 0 2px #00ff99,
+inset 0 0 5px #003300;
+
+}
+
+
+
+#progressBar{
+
+height:100%;
+
+width:0%;
+
+background:
+
+repeating-linear-gradient(
+90deg,
+#00ff99 0px,
+#00ff99 10px,
+#003300 10px,
+#003300 20px
+);
+
+
+box-shadow:
+0 0 10px #00ff99,
+0 0 12px #00ff99;
+
+
+transition:.4s;
+
+position:relative;
+
+}
+
+#progressBar.scanning{
+
+animation:scan 1s linear infinite;
+
+}
+
+
+@keyframes scan{
+
+from{
+
+background-position:0px;
+
+}
+
+to{
+
+background-position:40px;
+
+}
+
+}
+
+
+
+#progressText{
+
+margin-top:8px;
+
+color:#00ff99;
+
+font-family:monospace;
+
+text-shadow:
+
+0 0 5px #00ff99;
+
+}
+
+
+
+</style>
+
+</head>
+
+
+
+<body>
+
+
+
+<div class="app">
+
+
+
+<div class="header">
+
+
+<div class="logo">
+
+Duplicate <span>Finder</span> Pro
+
+</div>
+
+
+<div class="status ready" id="status">
+
+● Ready
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="upload" id="dropArea">
+
+
+<h2>📂 Upload Campaign File</h2>
+
+<p>Drag & Drop Excel / CSV</p>
+
+
+<input 
+type="file"
+id="fileInput"
+accept=".xlsx,.xls,.csv"
+/>
+
+
+<div id="fileInfo">
+
+Waiting for file...
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="cards">
+
+
+<div class="card">
+
+<h1 id="total">0</h1>
+
+<p>Total Records</p>
+
+</div>
+
+
+<div class="card">
+
+<h1 id="duplicate">0</h1>
+
+<p>Duplicate Removed</p>
+
+</div>
+
+
+<div class="card">
+
+<h1 id="clean">0</h1>
+
+<p>Clean Records</p>
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="extra">
+
+
+<div class="card">
+
+<h1 id="cid">0</h1>
+
+<p>Unique CID</p>
+
+</div>
+
+
+
+<div class="card">
+
+<h1 id="domain">0</h1>
+
+<p>Unique Domain</p>
+
+</div>
+
+
+
+<div class="card">
+
+<h1 id="client">0</h1>
+
+<p>Client Code</p>
+
+</div>
+
+
+</div>
+
+
+
+
+
+<button onclick="downloadFile()">
+
+⬇ Download Clean File
+
+</button>
+
+
+
+
+
+<div class="log">
+
+
+<div id="terminal">
+
+> System initialized...<br>
+> Waiting for file...
+
+</div>
+
+
+
+<div class="progress-container">
+
+<div id="progressBar"></div>
+
+</div>
+
+
+<div id="progressText">
+
+0% SCANNING
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+<script>
+
+
+const dropArea=document.getElementById("dropArea");
+
+const fileInput=document.getElementById("fileInput");
+
+const fileInfo=document.getElementById("fileInfo");
+const statusBox = document.getElementById("status");
+
+
+
+
+
+function showFileInfo(file){
+
+fileInfo.innerHTML=
+
+`
+📄 ${file.name}<br>
+📦 ${(file.size/1024/1024).toFixed(2)} MB
+
+`;
+
+}
+
+
+
+
+
+function liveTracking(percent,message){
+
+
+let bar = document.getElementById("progressBar");
+
+
+let terminal = document.getElementById("terminal");
+
+
+
+terminal.innerHTML +=
+`
+<br>> ${message}
+`;
+
+
+
+bar.style.width = percent+"%";
+
+
+
+document.getElementById("progressText").innerHTML =
+percent+"%";
+
+
+
+if(percent < 100){
+
+    bar.classList.add("scanning");
+
+}
+
+else{
+
+    bar.classList.remove("scanning");
+
+}
+
+
+
+terminal.scrollTop = terminal.scrollHeight;
+
+
+}
+
+
+
+
+
+
+
+dropArea.addEventListener(
+"dragover",
+(e)=>{
+
+e.preventDefault();
+
+dropArea.classList.add("dragover");
+
+});
+
+
+
+
+
+dropArea.addEventListener(
+"dragleave",
+()=>{
+
+dropArea.classList.remove("dragover");
+
+});
+
+
+
+
+
+
+dropArea.addEventListener(
+"drop",
+(e)=>{
+
+e.preventDefault();
+
+dropArea.classList.remove("dragover");
+
+
+fileInput.files=e.dataTransfer.files;
+
+
+fileInput.dispatchEvent(new Event("change"));
+
+});
+
+
+
+
+
+
+
+
+fileInput.addEventListener(
+"change",
+async function(e){
+
+
+
+let file=e.target.files[0];
+
+
+if(!file)
+
+return;
+
+
+
+showFileInfo(file);
+
+
+
+// reset
+
+document.querySelectorAll(".card h1").forEach(
+
+x=>x.innerHTML="0"
+
+);
+
+
+
+document.getElementById("terminal").innerHTML=
+
+`
+> New file selected ✔
+`;
+
+
+
+document.getElementById("progressBar").style.width="0%";
+
+document.getElementById("progressText").innerHTML="0%";
+
+
+
+statusBox.innerHTML=
+
+`
+<span class="loader"></span>
+Processing...
+`;
+
+statusBox.className="status processing";
+
+
+
+
+liveTracking(
+10,
+"Initializing Duplicate Engine..."
+);
+
+
+
+liveTracking(
+25,
+"Reading Excel Engine..."
+);
+
+
+
+liveTracking(
+45,
+"Checking File Format..."
+);
+
+
+
+let formData=new FormData();
+
+
+formData.append(
+"file",
+file
+);
+
+
+
+
+
+let response=await fetch(
+
+"http://127.0.0.1:5000/upload",
+
+{
+
+method:"POST",
+
+body:formData
+
+}
+
+);
+
+
+
+
+
+let data=await response.json();
+
+
+
+
+
+if(data.error){
+
+
+statusBox.innerHTML="⚠ Error";
+
+statusBox.className="status error";
+
+
+liveTracking(
+0,
+"Upload Failed ❌"
+);
+
+
+liveTracking(
+0,
+data.error
+);
+
+
+return;
+
+}
+
+
+
+
+
+liveTracking(
+70,
+"Duplicate Pattern Detection..."
+);
+
+
+
+liveTracking(
+90,
+"Cleaning Dataset..."
+);
+
+
+
+
+
+document.getElementById("total").innerHTML=
+
+data.total.toLocaleString();
+
+
+document.getElementById("duplicate").innerHTML=
+
+data.duplicate.toLocaleString();
+
+
+document.getElementById("clean").innerHTML=
+
+data.clean.toLocaleString();
+
+
+document.getElementById("cid").innerHTML=
+
+data.cid.toLocaleString();
+
+
+document.getElementById("domain").innerHTML=
+
+data.domain.toLocaleString();
+
+
+document.getElementById("client").innerHTML=
+
+data.client.toLocaleString();
+
+
+
+
+
+liveTracking(
+100,
+"Completed ✔ Clean File Ready"
+);
+
+
+
+
+
+statusBox.innerHTML="✔ Completed";
+
+statusBox.className="status completed";
+
+
+
+});
+
+
+
+
+
+
+
+
+function downloadFile(){
+
+
+window.open(
+
+"http://127.0.0.1:5000/download"
+
+);
+
+
+}
+
+
+</script>
+
+
+
+</body>
+
+</html>
