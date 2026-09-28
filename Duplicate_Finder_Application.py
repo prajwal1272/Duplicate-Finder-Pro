@@ -7,7 +7,33 @@ OUTPUT_FILE = None
 
 def process_file(file):
 
-    df = pd.read_excel(file)
+    filename = file.filename.lower()
+
+
+    # CSV handling (20 lakh limit)
+    if filename.endswith(".csv"):
+
+        df = pd.read_csv(file)
+
+        if len(df) > 2000000:
+            raise ValueError(
+                "CSV file too large. Maximum 20 lakh records allowed."
+            )
+
+
+    # Excel handling (small files only)
+    else:
+
+        df = pd.read_excel(
+            file,
+            engine="openpyxl"
+        )
+
+        if len(df) > 500000:
+            raise ValueError(
+                "Excel file too large. Please upload CSV for large data."
+            )
+
 
 
     # Column cleanup
@@ -28,6 +54,7 @@ def process_file(file):
     ]
 
 
+
     current_columns = list(df.columns)
 
 
@@ -37,34 +64,42 @@ def process_file(file):
     ]
 
 
+
     extra_columns = [
         col for col in current_columns
         if col not in required_columns
     ]
 
 
+
     errors = []
 
 
     if missing_columns:
+
         errors.append(
             f"Missing columns: {', '.join(missing_columns)}"
         )
 
 
     if extra_columns:
+
         errors.append(
             f"Extra columns found: {', '.join(extra_columns[:10])}"
         )
 
 
+
     if errors:
+
         raise ValueError(
             "Invalid file format. " + " | ".join(errors)
         )
 
 
+
     # Clean data
+
     for col in required_columns:
 
         df[col] = (
@@ -74,7 +109,9 @@ def process_file(file):
         )
 
 
-    # Remove duplicates
+
+    # Duplicate removal
+
     final_data = df.drop_duplicates(
 
         subset=[
@@ -85,10 +122,13 @@ def process_file(file):
         ],
 
         keep="first"
+
     )
 
 
+
     # Sorting
+
     final_data = final_data.sort_values(
 
         by=[
@@ -97,10 +137,13 @@ def process_file(file):
             "Campaign Name",
             "Domain"
         ]
+
     )
 
 
-    # Create Excel in memory
+
+    # Output Excel memory
+
     output = BytesIO()
 
 
@@ -124,7 +167,7 @@ def process_file(file):
 
         "clean": len(final_data),
 
-        "duplicate": len(df)-len(final_data),
+        "duplicate": len(df) - len(final_data),
 
         "cid": df["CID"].nunique(),
 
@@ -134,4 +177,4 @@ def process_file(file):
 
         "file": output
 
-    }   
+    }
