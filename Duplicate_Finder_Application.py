@@ -10,19 +10,21 @@ MAX_CSV_ROWS = 2000000   # 20 lakh limit
 
 def process_file(file):
 
+
     filename = file.filename.lower()
+
 
 
     # ==========================
     # READ FILE
     # ==========================
 
+
     if filename.endswith(".csv"):
 
 
-        df = pd.read_csv(
-            file
-        )
+        df = pd.read_csv(file)
+
 
 
         if len(df) > MAX_CSV_ROWS:
@@ -30,6 +32,7 @@ def process_file(file):
             raise ValueError(
                 "CSV file too large. Maximum 20 lakh records allowed."
             )
+
 
 
     elif filename.endswith((".xlsx", ".xls")):
@@ -41,7 +44,9 @@ def process_file(file):
         )
 
 
+
     else:
+
 
         raise ValueError(
             "Only CSV and Excel files are allowed."
@@ -49,17 +54,22 @@ def process_file(file):
 
 
 
+
     # ==========================
     # COLUMN CLEANUP
     # ==========================
 
+
     df.columns = (
+
         df.columns
         .astype(str)
         .str.strip()
         .str.replace("\n", " ", regex=False)
         .str.replace(r"\s+", " ", regex=True)
+
     )
+
 
 
 
@@ -74,6 +84,7 @@ def process_file(file):
 
 
 
+
     missing_columns = [
 
         col for col in required_columns
@@ -84,13 +95,17 @@ def process_file(file):
 
 
 
+
     if missing_columns:
+
 
         raise ValueError(
 
             f"Missing columns: {', '.join(missing_columns)}"
 
         )
+
+
 
 
 
@@ -112,12 +127,15 @@ def process_file(file):
 
 
 
+
+
     # ==========================
     # REMOVE DUPLICATES
     # ==========================
 
 
     final_data = df.drop_duplicates(
+
 
         subset=[
 
@@ -128,18 +146,23 @@ def process_file(file):
 
         ],
 
+
         keep="first"
 
     )
 
 
 
+
+
+
     # ==========================
-    # SORT
+    # SORT DATA
     # ==========================
 
 
     final_data = final_data.sort_values(
+
 
         by=[
 
@@ -154,8 +177,11 @@ def process_file(file):
 
 
 
+
+
+
     # ==========================
-    # OUTPUT XLSX MEMORY
+    # OUTPUT FILE
     # ==========================
 
 
@@ -163,17 +189,48 @@ def process_file(file):
 
 
 
-    final_data.to_excel(
+    # Large data CSV
+    if len(final_data) > 900000:
 
-        output,
 
-        index=False
+        final_data.to_csv(
 
-    )
+            output,
+
+            index=False,
+
+            encoding="utf-8-sig"
+
+        )
+
+
+        file_type = "csv"
+
+
+
+    # Small data Excel
+    else:
+
+
+        final_data.to_excel(
+
+            output,
+
+            index=False,
+
+            engine="openpyxl"
+
+        )
+
+
+        file_type = "xlsx"
+
 
 
 
     output.seek(0)
+
+
 
 
 
@@ -182,17 +239,26 @@ def process_file(file):
 
         "total": len(df),
 
+
         "clean": len(final_data),
+
 
         "duplicate": len(df) - len(final_data),
 
+
         "cid": df["CID"].nunique(),
+
 
         "domain": df["Domain"].nunique(),
 
+
         "client": df["Client Code"].nunique(),
 
-        "file": output
+
+        "file": output,
+
+
+        "file_type": file_type
 
 
     }

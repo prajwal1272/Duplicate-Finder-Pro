@@ -6,6 +6,7 @@ app = Flask(__name__)
 
 
 LATEST_FILE = None
+LATEST_TYPE = None
 
 
 
@@ -20,7 +21,7 @@ def home():
 @app.route("/upload", methods=["POST"])
 def upload():
 
-    global LATEST_FILE
+    global LATEST_FILE, LATEST_TYPE
 
 
     try:
@@ -32,6 +33,9 @@ def upload():
 
 
         LATEST_FILE = result["file"]
+
+        LATEST_TYPE = result["file_type"]
+
 
 
         return jsonify({
@@ -51,6 +55,7 @@ def upload():
         })
 
 
+
     except ValueError as e:
 
 
@@ -59,6 +64,7 @@ def upload():
             "error": str(e)
 
         }),400
+
 
 
 
@@ -75,12 +81,26 @@ def upload():
 
 
 
+
 @app.route("/download")
 def download():
+
 
     if LATEST_FILE is None:
 
         return "No file available",404
+
+
+
+    if LATEST_TYPE == "csv":
+
+        filename = "final_clean_data.csv"
+
+
+    else:
+
+        filename = "final_clean_data.xlsx"
+
 
 
 
@@ -90,16 +110,21 @@ def download():
 
         as_attachment=True,
 
-        download_name="final_clean_data.xlsx"
+        download_name=filename
 
     )
 
 
 
 
+
 if __name__ == "__main__":
 
+
     app.run(
+
         host="0.0.0.0",
+
         port=5000
+
     )
