@@ -5,38 +5,54 @@ from io import BytesIO
 OUTPUT_FILE = None
 
 
+MAX_CSV_ROWS = 2000000   # 20 lakh limit
+
+
 def process_file(file):
 
     filename = file.filename.lower()
 
 
-    # CSV handling (20 lakh limit)
+    # ==========================
+    # READ FILE
+    # ==========================
+
     if filename.endswith(".csv"):
 
-        df = pd.read_csv(file)
 
-        if len(df) > 2000000:
+        df = pd.read_csv(
+            file
+        )
+
+
+        if len(df) > MAX_CSV_ROWS:
+
             raise ValueError(
                 "CSV file too large. Maximum 20 lakh records allowed."
             )
 
 
-    # Excel handling (small files only)
-    else:
+    elif filename.endswith((".xlsx", ".xls")):
+
 
         df = pd.read_excel(
             file,
             engine="openpyxl"
         )
 
-        if len(df) > 500000:
-            raise ValueError(
-                "Excel file too large. Please upload CSV for large data."
-            )
+
+    else:
+
+        raise ValueError(
+            "Only CSV and Excel files are allowed."
+        )
 
 
 
-    # Column cleanup
+    # ==========================
+    # COLUMN CLEANUP
+    # ==========================
+
     df.columns = (
         df.columns
         .astype(str)
@@ -46,79 +62,70 @@ def process_file(file):
     )
 
 
+
     required_columns = [
+
         "Client Code",
         "CID",
         "Campaign Name",
         "Domain"
+
     ]
 
-
-
-    current_columns = list(df.columns)
 
 
     missing_columns = [
+
         col for col in required_columns
-        if col not in current_columns
+
+        if col not in df.columns
+
     ]
 
-
-
-    extra_columns = [
-        col for col in current_columns
-        if col not in required_columns
-    ]
-
-
-
-    errors = []
 
 
     if missing_columns:
 
-        errors.append(
-            f"Missing columns: {', '.join(missing_columns)}"
-        )
-
-
-    if extra_columns:
-
-        errors.append(
-            f"Extra columns found: {', '.join(extra_columns[:10])}"
-        )
-
-
-
-    if errors:
-
         raise ValueError(
-            "Invalid file format. " + " | ".join(errors)
+
+            f"Missing columns: {', '.join(missing_columns)}"
+
         )
 
 
 
-    # Clean data
+    # ==========================
+    # CLEAN DATA
+    # ==========================
+
 
     for col in required_columns:
 
+
         df[col] = (
+
             df[col]
             .astype(str)
             .str.strip()
+
         )
 
 
 
-    # Duplicate removal
+    # ==========================
+    # REMOVE DUPLICATES
+    # ==========================
+
 
     final_data = df.drop_duplicates(
 
         subset=[
+
             "Client Code",
             "CID",
             "Campaign Name",
             "Domain"
+
         ],
 
         keep="first"
@@ -127,24 +134,33 @@ def process_file(file):
 
 
 
-    # Sorting
+    # ==========================
+    # SORT
+    # ==========================
+
 
     final_data = final_data.sort_values(
 
         by=[
+
             "Client Code",
             "CID",
             "Campaign Name",
             "Domain"
+
         ]
 
     )
 
 
 
-    # Output Excel memory
+    # ==========================
+    # OUTPUT XLSX MEMORY
+    # ==========================
+
 
     output = BytesIO()
+
 
 
     final_data.to_excel(
@@ -154,6 +170,7 @@ def process_file(file):
         index=False
 
     )
+
 
 
     output.seek(0)
@@ -176,5 +193,6 @@ def process_file(file):
         "client": df["Client Code"].nunique(),
 
         "file": output
+
 
     }
