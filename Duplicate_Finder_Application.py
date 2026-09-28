@@ -140,76 +140,30 @@ def process_file(file):
     )
 
 
-
     # ==========================
     # CREATE OUTPUT FILE
     # ==========================
 
 
-    if len(final_data) > 200000:
+    temp_file = tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=".csv"
+    )
 
 
-        temp_file = tempfile.NamedTemporaryFile(
+    output_path = temp_file.name
 
-            delete=False,
-
-            suffix=".csv"
-
-        )
+    temp_file.close()
 
 
-        output_path = temp_file.name
-
-        temp_file.close()
-
-
-
-        final_data.to_csv(
-
-            output_path,
-
-            index=False,
-
-            encoding="utf-8-sig"
-
-        )
+    final_data.to_csv(
+        output_path,
+        index=False,
+        encoding="utf-8-sig"
+    )
 
 
-        file_type = "csv"
-
-
-
-    else:
-
-
-        temp_file = tempfile.NamedTemporaryFile(
-
-            delete=False,
-
-            suffix=".xlsx"
-
-        )
-
-
-        output_path = temp_file.name
-
-        temp_file.close()
-
-
-
-        final_data.to_excel(
-
-            output_path,
-
-            index=False,
-
-            engine="xlsxwriter"
-
-        )
-
-
-        file_type = "xlsx"
-
+    file_type = "csv"
 
 
 
@@ -220,27 +174,19 @@ def process_file(file):
 
     return {
 
-
         "total": len(df),
-
 
         "clean": len(final_data),
 
-
         "duplicate": len(df) - len(final_data),
-
 
         "cid": df["CID"].nunique(),
 
-
         "domain": df["Domain"].nunique(),
-
 
         "client": df["Client Code"].nunique(),
 
-
         "file": output_path,
-
 
         "file_type": file_type
 
