@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_file, render_template
 from Duplicate_Finder_Application import process_file
+import os
 
 
 app = Flask(__name__)
@@ -26,10 +27,12 @@ def upload():
 
     try:
 
+
         file = request.files["file"]
 
 
         result = process_file(file)
+
 
 
         LATEST_FILE = result["file"]
@@ -82,13 +85,25 @@ def upload():
 
 
 
+
 @app.route("/download")
 def download():
+
+
+    global LATEST_FILE
+
 
 
     if LATEST_FILE is None:
 
         return "No file available",404
+
+
+
+    if not os.path.exists(LATEST_FILE):
+
+        return "File expired",404
+
 
 
 
@@ -113,6 +128,8 @@ def download():
         download_name=filename
 
     )
+
+
 
 
 

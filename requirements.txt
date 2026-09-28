@@ -1,4 +1,5 @@
-Flask
-pandas
+xlsxwriter
 openpyxl
+pandas
+flask
 gunicorn

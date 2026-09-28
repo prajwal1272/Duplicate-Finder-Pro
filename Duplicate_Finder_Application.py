@@ -1,30 +1,27 @@
 import pandas as pd
-from io import BytesIO
+import tempfile
+import os
 
 
-OUTPUT_FILE = None
-
-
-MAX_CSV_ROWS = 2000000   # 20 lakh limit
+MAX_CSV_ROWS = 2000000
 
 
 def process_file(file):
 
-
     filename = file.filename.lower()
-
 
 
     # ==========================
     # READ FILE
     # ==========================
 
-
     if filename.endswith(".csv"):
 
-
-        df = pd.read_csv(file)
-
+        df = pd.read_csv(
+            file,
+            dtype=str,
+            low_memory=False
+        )
 
 
         if len(df) > MAX_CSV_ROWS:
@@ -34,42 +31,31 @@ def process_file(file):
             )
 
 
-
     elif filename.endswith((".xlsx", ".xls")):
-
 
         df = pd.read_excel(
             file,
-            engine="openpyxl"
+            engine="openpyxl",
+            dtype=str
         )
-
 
 
     else:
 
-
         raise ValueError(
             "Only CSV and Excel files are allowed."
         )
-
-
-
-
     # ==========================
     # COLUMN CLEANUP
     # ==========================
 
-
     df.columns = (
-
         df.columns
         .astype(str)
         .str.strip()
         .str.replace("\n", " ", regex=False)
         .str.replace(r"\s+", " ", regex=True)
-
     )
-
 
 
 
@@ -84,28 +70,19 @@ def process_file(file):
 
 
 
-
     missing_columns = [
 
         col for col in required_columns
-
         if col not in df.columns
 
     ]
 
 
-
-
     if missing_columns:
 
-
         raise ValueError(
-
             f"Missing columns: {', '.join(missing_columns)}"
-
         )
-
-
 
 
 
@@ -113,19 +90,14 @@ def process_file(file):
     # CLEAN DATA
     # ==========================
 
-
     for col in required_columns:
 
-
         df[col] = (
-
             df[col]
+            .fillna("")
             .astype(str)
             .str.strip()
-
         )
-
-
 
 
 
@@ -133,9 +105,7 @@ def process_file(file):
     # REMOVE DUPLICATES
     # ==========================
 
-
     final_data = df.drop_duplicates(
-
 
         subset=[
 
@@ -146,13 +116,9 @@ def process_file(file):
 
         ],
 
-
         keep="first"
 
     )
-
-
-
 
 
 
@@ -160,9 +126,7 @@ def process_file(file):
     # SORT DATA
     # ==========================
 
-
     final_data = final_data.sort_values(
-
 
         by=[
 
@@ -177,25 +141,32 @@ def process_file(file):
 
 
 
-
-
-
     # ==========================
-    # OUTPUT FILE
+    # CREATE OUTPUT FILE
     # ==========================
 
 
-    output = BytesIO()
+    if len(final_data) > 200000:
 
 
+        temp_file = tempfile.NamedTemporaryFile(
 
-    # Large data CSV
-    if len(final_data) > 900000:
+            delete=False,
+
+            suffix=".csv"
+
+        )
+
+
+        output_path = temp_file.name
+
+        temp_file.close()
+
 
 
         final_data.to_csv(
 
-            output,
+            output_path,
 
             index=False,
 
@@ -208,17 +179,31 @@ def process_file(file):
 
 
 
-    # Small data Excel
     else:
+
+
+        temp_file = tempfile.NamedTemporaryFile(
+
+            delete=False,
+
+            suffix=".xlsx"
+
+        )
+
+
+        output_path = temp_file.name
+
+        temp_file.close()
+
 
 
         final_data.to_excel(
 
-            output,
+            output_path,
 
             index=False,
 
-            engine="openpyxl"
+            engine="xlsxwriter"
 
         )
 
@@ -228,10 +213,9 @@ def process_file(file):
 
 
 
-    output.seek(0)
-
-
-
+    # ==========================
+    # RETURN RESULT
+    # ==========================
 
 
     return {
@@ -255,10 +239,9 @@ def process_file(file):
         "client": df["Client Code"].nunique(),
 
 
-        "file": output,
+        "file": output_path,
 
 
         "file_type": file_type
-
 
     }
